@@ -34,6 +34,14 @@ Any powershell function can be used inside a target, this includes calling .net 
 
 # Complete example
 
+This is the build script, saved as `build.ps1`. It'd be invoked from powershell just by dotsourcing the file:
+
+```
+.\build.ps1 -version 2.0.0
+```
+
+Complete source:
+
 ```powershell
 param(
   [string]$version = '1.0.0-dev',
