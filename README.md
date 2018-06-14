@@ -1,6 +1,6 @@
 # Posh-Build
 
-Posh-build is a small set of scripts for building .net applications from Powershell. This is not intended to be a replacement for the [psake Powershell build system](https://github.com/psake/psake/), but offers a simpler alternative for working with the `dotnet` CLI tools.
+Posh-build is a small set of scripts for building .net applications from Powershell. This is not intended to be a replacement for [psake](https://github.com/psake/psake/), but offers a simpler one-file alternative for working with the `dotnet` CLI tools.
 
 # Requirements
 
