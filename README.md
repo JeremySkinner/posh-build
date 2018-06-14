@@ -29,8 +29,8 @@ Any powershell function can be used inside a target, this includes calling .net 
 | Function             | Description | Example |
 | -------------------- | ----------- | ------- |
 | `Invoke-Dotnet`      | Runs the specified `dotnet` CLI tool. All parameters are passed to the tool. If the tool fails (with a non-zero exit code), then the build will fail. | `Invoke-Dotnet build MySolution.sln -c Release --no-incremental` |
-| `Invoke-Tests`       | Runs `dotnet test` against the specified test projects | `$projects = @("tests\NetFx\NetFxTests.csproj", "tests\NetCore\NetCore.csproj"); Invoke-Tests $projects -c release |
-| `New-Prompt`         | Creates a command line confirmation prompt. Useful for confirming deployments. | `$result = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages to Nuget?" @{ "&No" = "Cancel upload."; "&Yes" = "Upload the packages." } |
+| `Invoke-Tests`       | Runs `dotnet test` against the specified test projects | `$projects = @("tests\NetFx\NetFxTests.csproj", "tests\NetCore\NetCore.csproj"); Invoke-Tests $projects -c release` |
+| `New-Prompt`         | Creates a command line confirmation prompt. Useful for confirming deployments. | `$result = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages to Nuget?" @{ "&No" = "Cancel upload."; "&Yes" = "Upload the packages." }` |
 
 # Complete example
 
