@@ -88,9 +88,11 @@ function Execute-Target([string]$name) {
   }
 
   try {
+    $status_prefix = (1..10 | Foreach-Object { [char]0xBB; }) -Join "" # »»»»»»»»»» 
+
     foreach ($to_execute in $targets_to_execute) {
       if ($to_execute.Action) {
-        Write-Host »»»»»» $to_execute.Name -ForegroundColor Green
+        Write-Host $status_prefix $to_execute.Name -ForegroundColor Green
         try {
           & $to_execute.Action | Out-Default;
 
@@ -100,7 +102,7 @@ function Execute-Target([string]$name) {
         }
         catch {
           $success = $false;
-          write-host »»»»»» $to_execute.Name failed -ForegroundColor Red
+          write-host $status_prefix $to_execute.Name failed -ForegroundColor Red
           if ($_.Exception.Message -and $_.Exception.Message -ne 'ScriptHalted') {
             write-host $_.Exception.Message -ForegroundColor Red
           }
@@ -138,8 +140,11 @@ function Invoke-Dotnet {
 function New-Prompt($title, $details, $prompt_options, $default_choice = 0) {
   $options = @()
 
-  foreach($key in $prompt_options.Keys) {
-    $option = [System.Management.Automation.Host.ChoiceDescription]::new($key, $prompt_options[$key]);
+  foreach($entry in $prompt_options) {
+    $key = $entry[0]
+    $text = $entry[1]
+
+    $option = [System.Management.Automation.Host.ChoiceDescription]::new($key, $text);
     $options += $option
   }
 
