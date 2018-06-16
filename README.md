@@ -88,10 +88,10 @@ target publish {
   $packages | ForEach-Object { write-host $_.Name }
 
   # Ensure we haven't run this by accident.
-  $result = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages?" @{
-    "&No" = "Cancel upload"
-    "&Yes" = "Upload the packages."
-  }
+  $result = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages?" @(
+    @("&No", "Cancel upload")
+    @("&Yes", "Upload the packages.")
+  )
 
   # Cancelled
   if ($result -eq 0) {
