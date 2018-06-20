@@ -10,7 +10,7 @@ Windows Powershell 5 or Powershell Core 6.x
 
 Download the build script template by running the following from a powershell prompt:
 
-```
+```powershell
 Invoke-WebRequest -Uri https://raw.githubusercontent.com/JeremySkinner/posh-build/master/Bootstrap/Build.ps1 -OutFile Build.ps1
 ```
 
