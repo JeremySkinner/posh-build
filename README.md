@@ -8,16 +8,81 @@ Windows Powershell 5 or Powershell Core 6.x
 
 # Getting Started
 
-Download the `posh-build.ps1` file and reference it from your build script. Inside your build script, define build targets using the `target` function. These should specify a name and a script block. At the end of the script, you should call `Start-Build`
+Download the build script template by running the following from a powershell prompt:
+
+```
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/JeremySkinner/posh-build/master/Bootstrap/Build.ps1 -OutFile Build.ps1
+```
+
+This will create a file called `Build.ps1` in the current directory with a sample build script that you can modify.
+Inside this file, you can define build targets by calling the `target` function, passing it a name and a scriptblock to execute.
+At the end of the script, you should call `Start-Build`
+
+Here is a copy of the sample build script that's created:
 
 ```powershell
-. $PSScriptRoot/posh-build.ps1
+param(
+  [string]$version = '1.0.0',
+  [string]$configuration = 'Release',
+  [string]$path = $PSScriptRoot
+)
 
-target default {
-  write-host "Hello from posh-build"
+# Boostrap posh-build
+if (! (Test-Path $path\.build)) { mkdir $path\.build | Out-Null }
+if (! (Test-Path $path\.build\Posh-Build.ps1)) { Write-Host "Installing posh-build..."; Save-Script "Posh-Build" -Path $path\.build }
+. $path\.build\Posh-Build.ps1
+
+# Set these variables as desired
+$build_dir = "$path\.build";
+$packages_dir = "$build_dir\packages"
+$solution_file = "$path\MySolution.sln";
+
+target default -depends compile, test, deploy
+
+target compile {
+  Invoke-Dotnet build $solution_file -c $configuration --no-incremental `
+    /p:Version=$version
 }
 
-Start-Build
+target test {
+  # Set the path to the projects you want to test.
+  $test_projects = @(
+    "$path\src\MyProject.Tests\MyProject.Tests.csproj"
+  )
+
+  # This runs "dotnet test". Change to Invoke-Xunit to invoke "dotnet xunit"
+  Invoke-Tests $test_projects -c $configuration --no-build
+}
+
+target deploy {
+  # Find all the packages and display them for confirmation
+  $packages = dir $packages_dir -Filter "*.nupkg"
+
+  write-host "Packages to upload:"
+  $packages | ForEach-Object { write-host $_.Name }
+
+  # Ensure we haven't run this by accident.
+  $result = New-Prompt "Upload Packages" "Do you want to publish the NuGet packages?" @(
+    @("&No", "Does not upload the packages."),
+    @("&Yes", "Uploads the packages.")
+  )
+
+  # Cancelled
+  if ($result -eq 0) {
+    "Upload aborted"
+  }
+  # upload
+  elseif ($result -eq 1) {
+    $packages | foreach {
+      $package = $_.FullName
+      write-host "Uploading $package"
+      Invoke-Dotnet nuget push $package
+      write-host
+    }
+  }
+}
+
+Start-Build $args
 ```
 
 This script defines a single target called `default`. Run the script and the target will be executed.
@@ -32,82 +97,3 @@ Any powershell function can be used inside a target, this includes calling .net 
 | `Invoke-Tests`       | Runs `dotnet test` against the specified test projects | `$projects = @("tests\NetFx\NetFxTests.csproj", "tests\NetCore\NetCore.csproj"); Invoke-Tests $projects -c release` |
 | `Invoke-Xunit`       | Runs `dotnet xunit` against the specified test projects. | `$projects = @("tests\NetFx\NetFxTests.csproj", "tests\NetCore\NetCore.csproj"); Invoke-Xunit $projects -c release` |
 | `New-Prompt`         | Creates a command line confirmation prompt. Useful for confirming deployments. | `$result = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages to Nuget?" @{ "&No" = "Cancel upload."; "&Yes" = "Upload the packages." }` |
-
-# Complete example
-
-This is the build script, saved as `build.ps1`. It'd be invoked from powershell just by dotsourcing the file:
-
-```
-.\build.ps1 -version 2.0.0
-```
-
-Complete source:
-
-```powershell
-param(
-  [string]$version = '1.0.0-dev',
-  [string]$configuration = 'Release'
-)
-
-. $PSScriptRoot/posh-build.ps1
-
-$base = $PSScriptRoot;
-$build_dir = "$base\build";
-$packages_dir = "$build_dir\packages"
-$output_dir = "$build_dir\$configuration";
-$solution_file = "$base\MySolution.sln";
-
-target default -depends compile, test, deploy
-
-target compile {
-  Invoke-Dotnet build $solution_file -c $configuration --no-incremental `
-    /p:Version=$version
-}
-
-target test {
-  $test_projects = @(
-    "$base\tests\Tests.netcoreapp1\Tests.netcoreapp1.csproj",
-    "$base\tests\Tests.netcoreapp2\Tests.netcoreapp2.csproj"
-  )
-
-  Invoke-Tests $test_projects -c $configuration --no-build
-}
-
-target deploy {
-  Remove-Item $build_dir -Force -Recurse 2> $null
-  Invoke-Dotnet pack $solution_file -c $configuration /p:PackageOutputPath=$build_dir\Packages /p:Version=$version
-
-  # Copy to output dir
-  Copy-Item "$base\src\MyProject\bin\$configuration\netstandard2.0" -Destination "$output_dir\MyProject-netstandard2.0" -Recurse
-  Copy-Item "$base\src\MyProject\bin\$configuration\netstandard1.0" -Destination "$output_dir\MyProject-netstandard1.0" -Recurse
-}
-
-target publish {
-  # Find all the packages and display them for confirmation
-  $packages = dir $packages_dir -Filter "*.nupkg"
-  write-host "Packages to upload:"
-  $packages | ForEach-Object { write-host $_.Name }
-
-  # Ensure we haven't run this by accident.
-  $result = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages?" @(
-    @("&No", "Cancel upload")
-    @("&Yes", "Upload the packages.")
-  )
-
-  # Cancelled
-  if ($result -eq 0) {
-    "Upload aborted"
-  }
-  # upload
-  elseif ($result -eq 1) {
-    $packages | foreach {
-      $package = $_.FullName
-      write-host "Uploading $package"
-      Invoke-Dotnet nuget push $package --source "https://www.nuget.org/api/v2/package"
-      write-host
-    }
-  }
-}
-
-Start-Build $args
-```
