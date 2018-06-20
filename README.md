@@ -55,11 +55,15 @@ target test {
 }
 
 target deploy {
+  # Run dotnet pack to generate the nuget packages
+  Remove-Item $build_dir -Force -Recurse 2> $null
+  Invoke-Dotnet pack $solution_file -c $configuration /p:PackageOutputPath=$packages_dir /p:Version=$version
+
   # Find all the packages and display them for confirmation
   $packages = dir $packages_dir -Filter "*.nupkg"
 
-  write-host "Packages to upload:"
-  $packages | ForEach-Object { write-host $_.Name }
+  Write-Host "Packages to upload:"
+  $packages | ForEach-Object { Write-Host $_.Name }
 
   # Ensure we haven't run this by accident.
   $result = New-Prompt "Upload Packages" "Do you want to publish the NuGet packages?" @(
@@ -73,11 +77,11 @@ target deploy {
   }
   # upload
   elseif ($result -eq 1) {
-    $packages | foreach {
+    $packages | ForEach-Object {
       $package = $_.FullName
-      write-host "Uploading $package"
+      Write-Host "Uploading $package"
       Invoke-Dotnet nuget push $package
-      write-host
+      Write-Host
     }
   }
 }
