@@ -1,5 +1,26 @@
-# dotnet build utilities for Powershell by Jeremy Skinner
-# For the latest version of this file, go to https://github.com/jeremyskinner/posh-build
+<#PSScriptInfo
+.VERSION 0.1
+.GUID 3d8fd216-d40b-4838-9368-bfd3fffc178d
+.AUTHOR Jeremy Skinner
+.COMPANYNAME
+.COPYRIGHT (c) Jeremy Skinner 2018
+.TAGS dotnet build dotnet-build
+.LICENSEURI https://github.com/JeremySkinner/posh-build/blob/master/LICENSE.txt
+.PROJECTURI https://github.com/JeremySkinner/posh-build
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
+.RELEASENOTES
+- 0.1 Initial release
+#>
+
+<#
+.DESCRIPTION
+ A lightweight build system for .NET Core projects
+#>
+
+Param()
 
 $script:Targets = [System.Collections.Generic.Dictionary[string, [BuildTarget]]]::new()
 function target {
@@ -46,8 +67,8 @@ function Start-Build($params = @()) {
 
   $exit_code = 0;
   foreach($target_name in $target_names) {
-    $target_success = Execute-Target $target_name
-    
+    $target_success = Invoke-Target $target_name
+
     if (!$target_success) {
       $exit_code = 1;
     }
@@ -73,7 +94,7 @@ function Start-Build($params = @()) {
   exit($exit_code)
 }
 
-function Execute-Target([string]$name) {
+function Invoke-Target([string]$name) {
   $success = $true;
   $target = $null;
 
@@ -91,7 +112,7 @@ function Execute-Target([string]$name) {
   }
 
   try {
-    $status_prefix = (1..10 | Foreach-Object { [char]0xBB; }) -Join "" # »»»»»»»»»» 
+    $status_prefix = (1..10 | Foreach-Object { [char]0xBB; }) -Join "" # »»»»»»»»»»
 
     foreach ($to_execute in $targets_to_execute) {
       if ($to_execute.Action) {
@@ -116,7 +137,7 @@ function Execute-Target([string]$name) {
   }
   catch {
     $success = $false
-    write-host "Target failed " + $_.Exception.Message
+    write-host ("Target failed " + $_.Exception.Message)
     exit(1);
     break;
   }
