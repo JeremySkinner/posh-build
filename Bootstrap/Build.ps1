@@ -5,14 +5,13 @@ param(
 )
 
 # Boostrap posh-build
-if (! (Test-Path $path\.build)) { mkdir $path\.build | Out-Null }
-if (! (Test-Path $path\.build\Posh-Build.ps1)) { Write-Host "Installing posh-build..."; Save-Script "Posh-Build" -Path $path\.build }
-. $path\.build\Posh-Build.ps1
+$build_dir = Join-Path $path ".build"
+if (! (Test-Path (Join-Path $build_dir "Posh-Build.ps1"))) { Write-Host "Installing posh-build..."; mkdir $build_dir -ErrorAction Ignore | Out-Null; Save-Script "Posh-Build" -Path $build_dir }
+. (Join-Path $build_dir "Posh-Build.ps1")
 
 # Set these variables as desired
-$build_dir = "$path\.build";
-$packages_dir = "$build_dir\packages"
-$solution_file = "$path\MySolution.sln";
+$packages_dir = Join-Path $build_dir "packages"
+$solution_file = Join-Path $path "MySolution.sln";
 
 target default -depends compile, test, deploy
 
@@ -33,7 +32,7 @@ target test {
 
 target deploy {
   # Run dotnet pack to generate the nuget packages
-  Remove-Item $build_dir -Force -Recurse 2> $null
+  Remove-Item $packages_dir -Force -Recurse 2> $null
   Invoke-Dotnet pack $solution_file -c $configuration /p:PackageOutputPath=$packages_dir /p:Version=$version
 
   # Find all the packages and display them for confirmation
