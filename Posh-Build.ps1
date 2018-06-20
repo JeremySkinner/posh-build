@@ -44,6 +44,9 @@ function Start-Build($params = @()) {
   $timer = [System.Diagnostics.Stopwatch]::new()
   $timer.Start()
 
+  $version = (Test-ScriptFileInfo (Join-Path $PSScriptRoot "Posh-Build.ps1")).Version
+  Write-Host "Posh-Build v$version by Jeremy Skinner (https://github.com/JeremySkinner/Posh-Build)" -ForegroundColor Cyan
+
   $target_names = @()
 
   for($i = 0; $i -lt $params.Count; $i++) {
