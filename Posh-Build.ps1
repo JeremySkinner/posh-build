@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 0.1
+.VERSION 0.1.1
 .GUID 3d8fd216-d40b-4838-9368-bfd3fffc178d
 .AUTHOR Jeremy Skinner
 .COMPANYNAME
@@ -44,8 +44,8 @@ function Start-Build($params = @()) {
   $timer = [System.Diagnostics.Stopwatch]::new()
   $timer.Start()
 
-  $version = (Test-ScriptFileInfo (Join-Path $PSScriptRoot "Posh-Build.ps1")).Version
-  Write-Host "Posh-Build v$version by Jeremy Skinner (https://github.com/JeremySkinner/Posh-Build)" -ForegroundColor Cyan
+  $posh_build_version = (Test-ScriptFileInfo (Join-Path $PSScriptRoot "Posh-Build.ps1")).Version
+  Write-Host "Posh-Build v$posh_build_version by Jeremy Skinner (https://github.com/JeremySkinner/Posh-Build)" -ForegroundColor Cyan
 
   $target_names = @()
 
