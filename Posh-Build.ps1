@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 0.1.1
+.VERSION 0.2.0
 .GUID 3d8fd216-d40b-4838-9368-bfd3fffc178d
 .AUTHOR Jeremy Skinner
 .COMPANYNAME
@@ -22,7 +22,7 @@
 
 Param()
 
-$script:Targets = [System.Collections.Generic.Dictionary[string, [BuildTarget]]]::new()
+$script:PoshBuildTargets = [System.Collections.Generic.Dictionary[string, [BuildTarget]]]::new()
 function target {
   [CmdletBinding()]
   param(
@@ -32,38 +32,24 @@ function target {
     [string[]]$depends = @()
   )
 
-  if ($script:Targets.ContainsKey($name)) {
+  if ($script:PoshBuildTargets.ContainsKey($name)) {
     throw "Target $name already defined.";
   }
 
   $target = [BuildTarget]::new($action, $depends, $name);
-  $script:Targets.Add($name, $target);
+  $script:PoshBuildTargets.Add($name, $target);
 }
 
-function Start-Build($params = @()) {
+function Start-Build([string[]] $target_names = 'default') {
   $timer = [System.Diagnostics.Stopwatch]::new()
   $timer.Start()
 
   $posh_build_version = (Test-ScriptFileInfo (Join-Path $PSScriptRoot "Posh-Build.ps1")).Version
   Write-Host "Posh-Build v$posh_build_version by Jeremy Skinner (https://github.com/JeremySkinner/Posh-Build)" -ForegroundColor Cyan
 
-  $target_names = @()
-
-  for($i = 0; $i -lt $params.Count; $i++) {
-    if ($params[$i] -eq '-t' -or $params[$i] -eq '-targets') {
-      if ($params[$i+1]) {
-        $target_names += $params[$i+1];
-      }
-    }
-  }
-
-  if ($target_names.Count -eq 0) {
-    $target_names += 'default'
-  }
-
   # Verify all target names before running
   foreach($target_name in $target_names) {
-    if (-not $script:Targets.ContainsKey($target_names)) {
+    if (-not $script:PoshBuildTargets.ContainsKey($target_name)) {
       throw "Target $target_name not found"
     }
   }
@@ -84,7 +70,6 @@ function Start-Build($params = @()) {
   $ts.Milliseconds / 10);
 
   Write-Host ""
-
   Write-Host "Build " -NoNewline
   if ($exit_code) {
     write-host "Failed " -NoNewline -ForegroundColor Red
@@ -101,11 +86,11 @@ function Invoke-Target([string]$name) {
   $success = $true;
   $target = $null;
 
-  if (-not $script:Targets.ContainsKey($name)) {
+  if (-not $script:PoshBuildTargets.ContainsKey($name)) {
     throw "Target $name not found"
   }
 
-  $target = $script:Targets[$name];
+  $target = $script:PoshBuildTargets[$name];
   $targets_to_execute = [System.Collections.Generic.List[BuildTarget]]::new();
 
   foreach ($target_in_sequence in $target.GetExecutionSequence()) {
@@ -239,10 +224,10 @@ class BuildTarget {
   }
 
   [BuildTarget] EnsureTargetExists([string]$dependency_name) {
-    if (! $script:Targets.ContainsKey($dependency_name)) {
+    if (! $script:PoshBuildTargets.ContainsKey($dependency_name)) {
       throw "Target $dependency_name could not be found";
     }
 
-    return $script:Targets[$dependency_name];
+    return $script:PoshBuildTargets[$dependency_name];
   }
 }

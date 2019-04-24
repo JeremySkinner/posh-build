@@ -1,7 +1,8 @@
 param(
   [string]$version = '1.0.0',
   [string]$configuration = 'Release',
-  [string]$path = $PSScriptRoot
+  [string]$path = $PSScriptRoot,
+  [string[]]$targets = 'default'
 )
 
 # Boostrap posh-build
@@ -62,4 +63,4 @@ target deploy {
   }
 }
 
-Start-Build $args
+Start-Build $targets
