@@ -159,7 +159,6 @@ function Invoke-Xunit($test_projects, $configuration = 'debug') {
 }
 
 function Invoke-Dotnet {
-  write-host $args
   dotnet $args
   if ($LASTEXITCODE) { throw "Dotnet failed" }
 }
