@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 0.2.0
+.VERSION 0.3.0
 .GUID 3d8fd216-d40b-4838-9368-bfd3fffc178d
 .AUTHOR Jeremy Skinner
 .COMPANYNAME
@@ -161,6 +161,37 @@ function Invoke-Xunit($test_projects, $configuration = 'debug') {
 function Invoke-Dotnet {
   dotnet $args
   if ($LASTEXITCODE) { throw "Dotnet failed" }
+}
+
+function Nuget-Push([Parameter(Mandatory=$true)]$directory, [Parameter(Mandatory=$true)]$key, $prompt) {
+  $packages = dir $directory -Filter "*.nupkg"
+  write-host "Packages to upload:"
+  $packages | ForEach-Object { write-host $_.Name }
+
+  if ($prompt) {
+    # Ensure we haven't run this by accident.
+    $proceed = New-Prompt "Upload Packages" "Do you want to upload the NuGet packages to the NuGet server?" @(
+      @("&No", "Does not upload the packages."),
+      @("&Yes", "Uploads the packages.")
+    )
+  }
+  else {
+    $proceed = 1;
+  }
+
+  # Cancelled
+  if ($proceed -eq 0) {
+    "Upload aborted"
+  }
+  # upload
+  elseif ($proceed -eq 1) {
+    $packages | foreach {
+      $package = $_.FullName
+      Write-Host "Uploading $package"
+      Invoke-Dotnet nuget push $package --api-key $key --source "https://www.nuget.org/api/v2/package"
+      Write-Host
+    }
+  }
 }
 
 function New-Prompt($title, $details, $prompt_options, $default_choice = 0) {
